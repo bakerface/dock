@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-pkill -0 "$0" && exit 0 || true
-
 working_dir="$1"
 container_name="$2"
 
@@ -13,7 +11,7 @@ working_dir="`cd $working_dir && pwd`"
 
 if [[ "$2" == "" ]]; then
   container_name="`basename $working_dir`"
-  image_name="berth/$container_name"
+  image_name="dock/$container_name"
 fi
 
 if [[ -z $(cd $working_dir && git pull | grep "Already up-to-date") ]]; then
