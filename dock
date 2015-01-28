@@ -10,9 +10,10 @@ dock_release() {
   else
     release=$(curl -sSL "https://api.github.com/repos/$2/releases?per_page=1")
     name=$(json_value "$release" 'name') 
-    tarball_url=$(json_value "$release" 'tarball_url') 
+    tarball_url=$(json_value "$release" 'tarball_url')
+    image_name="$1:$name"
 
-    echo $name $tarball_url
+    echo $image_name
   fi
 }
 
@@ -23,6 +24,7 @@ try_pull() {
   if [[ ! -d "$release_dir" ]]; then
     mkdir -p "$release_dir"
     curl -sSL $2 | tar xzp --strip-components=1 -C "$release_dir"
+    (cd "$release_dir" && docker build -t $image_name .)
   fi
 }
 
