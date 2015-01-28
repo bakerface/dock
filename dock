@@ -53,11 +53,6 @@ dock_pull() {
     docker stop $current_container &>/dev/null
     docker rm $(docker ps -a -q) &>/dev/null
     docker rmi $current_image $(docker images | grep '^<none>' | awk '{print $3}') &>/dev/null
-
-    docker run -d $1:$tag_name || {
-      ercho "Failed to start docker container for $1"
-      exit 1
-    }
   fi
 }
 
@@ -70,7 +65,7 @@ dock_run() {
   elif [[ -z "$current_container" ]]; then
     docker rm $(docker ps -a -q) &>/dev/null
     
-    docker run -d $current_image || {
+    docker run --privileged -v /dev/bus/usb:/dev/bus/usb -d $current_image || {
       ercho "Failed to start docker container for $1"
       exit 1
     }
