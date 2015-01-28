@@ -68,6 +68,8 @@ dock_run() {
   if [[ -z "$current_image" ]]; then
     dock_pull $1
   elif [[ -z "$current_container" ]]; then
+    docker rm $(docker ps -a -q) &>/dev/null
+    
     docker run -d $current_image || {
       ercho "Failed to start docker container for $1"
       exit 1
