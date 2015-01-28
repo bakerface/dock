@@ -46,6 +46,9 @@ dock_pull() {
       rm -rf $(pwd)
       exit 1
     }
+    
+    rm -rf $(pwd)
+    popd &>/dev/null
 
     docker stop $current_container &>/dev/null
     docker rm $(docker ps -a -q) &>/dev/null
@@ -53,12 +56,22 @@ dock_pull() {
 
     docker run -d $1:$tag_name || {
       ercho "Failed to start docker container for $1"
-      rm -rf $(pwd)
       exit 1
     }
+  fi
+}
 
-    rm -rf $(pwd)
-    popd &>/dev/null
+dock_run() {
+  current_image=$(docker images | grep $1 | awk '{print $3}')
+  current_container=$(docker ps | grep $1 | awk '{print $1}')
+
+  if [[ -z "$current_image" ]]; then
+    dock_pull $1
+  elif [[ -z "$current_container" ]]; then
+    docker run -d $current_image || {
+      ercho "Failed to start docker container for $1"
+      exit 1
+    }
   fi
 }
 
@@ -83,6 +96,17 @@ pull)
     dock_pull $@
   else
     ercho "Usage: dock pull <owner/repo>"
+    exit 1
+  fi
+;;
+
+run)
+  shift
+
+  if [[ $# -eq 1 ]]; then
+    dock_run $@
+  else
+    ercho "Usage: dock run <owner/repo>"
     exit 1
   fi
 ;;
