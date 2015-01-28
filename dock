@@ -1,32 +1,52 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
 
-working_dir="$1"
-container_name="$2"
+json_value() {
+  echo "$1" | while read k v; do [[ $k =~ "\"$2\"" ]] && v=${v##\"} && echo ${v%%\"*}; done
+}
 
-if [[ "$1" == "" ]]; then
-  working_dir="`dirname $0`"
-fi
+dock_release() {
+  if [[ $# -ne 1 ]]; then
+    echo "usage: dock release <owner/repo>"
+  else
+    release=$(curl -sSL "https://api.github.com/repos/$2/releases?per_page=1")
+    name=$(json_value "$release" 'name') 
+    tarball_url=$(json_value "$release" 'tarball_url') 
 
-working_dir="`cd $working_dir && pwd`"
+    echo $name $tarball_url
+  fi
+}
 
-if [[ "$2" == "" ]]; then
-  container_name="`basename $working_dir`"
-  image_name="dock/$container_name"
-fi
+try_pull() {
+  release_dir="${3:-.}/$1"
 
-if [[ -z $(cd $working_dir && git pull | grep "Already up-to-date") ]]; then
-  docker build -t $image_name $working_dir
-  docker stop $container_name || true
-  docker rm $container_name || true
-  docker rmi $(docker images | grep "^<none>" | awk '{print $3}') || true
-fi
+  if [[ ! -d "$release_dir" ]]; then
+    mkdir -p "$release_dir"
+    curl -sSL $2 | tar xzp -C "$release_dir"
+  fi
+}
 
-if [[ -z $(docker images | grep $image_name) ]]; then
-  docker build -t $image_name $working_dir
-  docker rmi $(docker images | grep "^<none>" | awk '{print $3}') || true
-fi
+dock_pull() {
+  if [[ $# -lt 1 ]]; then
+    echo "usage: dock pull <owner/repo> [workspace]"
+  else
+    dock_release "$1"
+    try_pull $name $tarball_url $2
+  fi
+}
 
-if [[ -z $(docker ps | grep $container_name) ]]; then
-  docker rm $container_name || true
-  docker run --name $container_name -p 8080:8080 -d $image_name
-fi
+case "$1" in
+
+release)
+  shift
+  dock_release $@
+;;
+
+pull)
+  shift
+  dock_pull $@
+;;
+
+*)
+;;
+
+esac
