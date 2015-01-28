@@ -17,11 +17,12 @@ dock_release() {
 }
 
 try_pull() {
-  release_dir="${3:-.}/$1"
+  repo_dir="${4:-.}/$3"
+  release_dir="$repo_dir/$1"
 
   if [[ ! -d "$release_dir" ]]; then
     mkdir -p "$release_dir"
-    curl -sSL $2 | tar xzp -C "$release_dir"
+    curl -sSL $2 | tar xzp --strip-components=1 -C "$release_dir"
   fi
 }
 
@@ -30,7 +31,7 @@ dock_pull() {
     echo "usage: dock pull <owner/repo> [workspace]"
   else
     dock_release "$1"
-    try_pull $name $tarball_url $2
+    try_pull $name $tarball_url $@
   fi
 }
 
