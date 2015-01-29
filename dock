@@ -58,16 +58,19 @@ dock_pull() {
 }
 
 dock_run() {
-  current_image=$(docker images | grep $1 | awk '{print $3}')
-  current_container=$(docker ps | grep $1 | awk '{print $1}')
+  repo="$1"
+  shift
+
+  current_image=$(docker images | grep $repo | awk '{print $3}')
+  current_container=$(docker ps | grep $repo | awk '{print $1}')
 
   if [[ -z "$current_image" ]]; then
-    dock_pull $1
+    dock_pull $repo
   elif [[ -z "$current_container" ]]; then
     docker rm $(docker ps -a -q) &>/dev/null
     
-    docker run --privileged -v /dev/bus/usb:/dev/bus/usb -d $current_image || {
-      ercho "Failed to start docker container for $1"
+    docker run $@ -d $current_image || {
+      ercho "Failed to start docker container for $repo"
       exit 1
     }
   fi
@@ -107,10 +110,10 @@ pull)
 run)
   shift
 
-  if [[ $# -eq 1 ]]; then
+  if [[ $# -ge 1 ]]; then
     dock_run $@
   else
-    ercho "Usage: dock run <owner/repo>"
+    ercho "Usage: dock run <owner/repo> [options]"
     exit 1
   fi
 ;;
