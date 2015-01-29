@@ -73,6 +73,12 @@ dock_run() {
   fi
 }
 
+dock_stop() {
+  current_container=$(docker ps | grep $1 | awk '{print $1}')
+  docker stop $current_container &>/dev/null
+  docker rm $(docker ps -a -q) &>/dev/null
+}
+
 case "$1" in
 
 release)
@@ -106,6 +112,16 @@ run)
   else
     ercho "Usage: dock run <owner/repo>"
     exit 1
+  fi
+;;
+
+stop)
+  shift
+
+  if [[ $# -eq 1 ]]; then
+    dock_stop $@
+  else
+    ercho "Usage: dock stop <owner/repo>"
   fi
 ;;
 
