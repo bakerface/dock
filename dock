@@ -67,7 +67,7 @@ dock_run() {
   if [[ -z "$current_image" ]]; then
     dock_pull $repo
   elif [[ -z "$current_container" ]]; then
-    docker rm $(docker ps -a -q) &>/dev/null
+    docker rm $(docker ps -a | grep $repo | awk '{print $1}') &>/dev/null
     
     docker run $@ -d $current_image || {
       ercho "Failed to start docker container for $repo"
@@ -79,7 +79,7 @@ dock_run() {
 dock_stop() {
   current_container=$(docker ps | grep $1 | awk '{print $1}')
   docker stop $current_container &>/dev/null
-  docker rm $(docker ps -a -q) &>/dev/null
+  docker rm $(docker ps -a | grep $1 | awk '{print $1}') &>/dev/null
 }
 
 case "$1" in
