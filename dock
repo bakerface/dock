@@ -125,6 +125,7 @@ stop)
     dock_stop $@
   else
     ercho "Usage: dock stop <owner/repo>"
+    exit 1
   fi
 ;;
 
@@ -132,3 +133,5 @@ stop)
 ;;
 
 esac
+
+exit 0
